@@ -998,30 +998,38 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then((registration) => {
-                    console.log('SW registered: ', registration);
-                })
-                .catch((registrationError) => {
-                    console.log('SW registration failed: ', registrationError);
-                });
-        });
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('✅ Service Worker registered successfully:', registration);
+            })
+            .catch((error) => {
+                console.log('❌ Service Worker registration failed:', error);
+            });
     }
     
     // Handle PWA install prompt
     let deferredPrompt;
+    let installBanner;
+    
     window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('🔥 Install prompt triggered');
         e.preventDefault();
         deferredPrompt = e;
-        
-        // Show install button or banner
         showInstallPrompt();
     });
     
+    // Show install prompt immediately for testing
+    setTimeout(() => {
+        if (!deferredPrompt) {
+            console.log('📱 Creating manual install prompt for testing');
+            showManualInstallPrompt();
+        }
+    }, 3000);
+    
     function showInstallPrompt() {
-        // Create install prompt
-        const installBanner = document.createElement('div');
+        if (installBanner) return; // Don't show multiple banners
+        
+        installBanner = document.createElement('div');
         installBanner.className = 'install-banner';
         installBanner.innerHTML = `
             <div class="install-content">
@@ -1038,24 +1046,78 @@ document.addEventListener('DOMContentLoaded', () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    }
+                    console.log('Install choice:', choiceResult.outcome);
                     deferredPrompt = null;
-                    installBanner.remove();
+                    hideInstallBanner();
                 });
+            } else {
+                // Manual install instructions
+                showManualInstallInstructions();
             }
         });
         
         document.getElementById('installClose').addEventListener('click', () => {
-            installBanner.remove();
+            hideInstallBanner();
         });
         
-        // Auto-hide after 10 seconds
+        // Auto-hide after 15 seconds
         setTimeout(() => {
-            if (document.body.contains(installBanner)) {
-                installBanner.remove();
-            }
-        }, 10000);
+            hideInstallBanner();
+        }, 15000);
     }
+    
+    function showManualInstallPrompt() {
+        if (installBanner) return;
+        
+        installBanner = document.createElement('div');
+        installBanner.className = 'install-banner';
+        installBanner.innerHTML = `
+            <div class="install-content">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Add to Home Screen for app experience</span>
+                <button class="install-btn" id="installBtn">How?</button>
+                <button class="install-close" id="installClose">×</button>
+            </div>
+        `;
+        
+        document.body.appendChild(installBanner);
+        
+        document.getElementById('installBtn').addEventListener('click', () => {
+            showManualInstallInstructions();
+        });
+        
+        document.getElementById('installClose').addEventListener('click', () => {
+            hideInstallBanner();
+        });
+    }
+    
+    function showManualInstallInstructions() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        let instructions = '';
+        if (isIOS) {
+            instructions = 'Tap the Share button (📤) → "Add to Home Screen"';
+        } else if (isAndroid) {
+            instructions = 'Tap Chrome menu (⋮) → "Add to Home Screen"';
+        } else {
+            instructions = 'Use browser menu → "Add to Home Screen" or "Install App"';
+        }
+        
+        alert(`📱 Install Instructions:\n\n${instructions}\n\nThis will add the chat app to your home screen like WhatsApp!`);
+        hideInstallBanner();
+    }
+    
+    function hideInstallBanner() {
+        if (installBanner && document.body.contains(installBanner)) {
+            installBanner.remove();
+            installBanner = null;
+        }
+    }
+    
+    // Check if app is already installed
+    window.addEventListener('appinstalled', () => {
+        console.log('🎉 App was installed successfully');
+        hideInstallBanner();
+    });
 });
