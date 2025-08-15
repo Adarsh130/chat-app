@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Anonymous Chat</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="End-to-end encrypted anonymous chat application">
+    <meta name="theme-color" content="#00a884">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AnonChat">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="whatsapp-container">
+        <!-- Header like WhatsApp -->
+        <div class="whatsapp-header">
+            <div class="header-left">
+                <div class="avatar">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="header-info">
+                    <h3>Anonymous Chat</h3>
+                    <span class="status" id="onlineStatus">
+                        <span id="onlineCount">0</span> online
+                    </span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="header-btn" id="menuBtn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar" id="searchBar" style="display: none;">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search messages..." autocomplete="off">
+                <button class="search-close" id="searchClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <!-- Chat messages area -->
+        <div class="chat-area" id="chatMessages">
+            <div class="welcome-message">
+                <div class="welcome-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <p>Messages are end-to-end encrypted. No one outside of this chat can read them.</p>
+            </div>
+        </div>
+
+        <!-- Input area like WhatsApp -->
+        <div class="input-area">
+            <button class="input-btn emoji-btn" id="emojiBtn">
+                <i class="far fa-smile"></i>
+            </button>
+            <button class="input-btn attach-btn" id="attachBtn">
+                <i class="fas fa-paperclip"></i>
+            </button>
+            <div class="input-wrapper">
+                <input type="text" id="messageInput" placeholder="Type a message" maxlength="500">
+                <div class="reply-preview" id="replyPreview" style="display: none;">
+                    <div class="reply-content">
+                        <div class="reply-header">
+                            <span class="reply-to">Reply to <span id="replyToUser"></span></span>
+                            <button class="reply-close" id="replyClose">×</button>
+                        </div>
+                        <div class="reply-text" id="replyText"></div>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" style="display: none;">
+            <button class="send-btn" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <!-- Emoji Picker -->
+        <div class="emoji-picker" id="emojiPicker" style="display: none;">
+            <div class="emoji-grid">
+                <span class="emoji" data-emoji="😀">😀</span>
+                <span class="emoji" data-emoji="😂">😂</span>
+                <span class="emoji" data-emoji="😍">😍</span>
+                <span class="emoji" data-emoji="🤔">🤔</span>
+                <span class="emoji" data-emoji="😊">😊</span>
+                <span class="emoji" data-emoji="😎">😎</span>
+                <span class="emoji" data-emoji="😢">😢</span>
+                <span class="emoji" data-emoji="😡">😡</span>
+                <span class="emoji" data-emoji="👍">👍</span>
+                <span class="emoji" data-emoji="👎">👎</span>
+                <span class="emoji" data-emoji="❤️">❤️</span>
+                <span class="emoji" data-emoji="🔥">🔥</span>
+                <span class="emoji" data-emoji="💯">💯</span>
+                <span class="emoji" data-emoji="🎉">🎉</span>
+                <span class="emoji" data-emoji="👏">👏</span>
+                <span class="emoji" data-emoji="🙏">🙏</span>
+            </div>
+        </div>
+
+        <!-- Reaction Picker -->
+        <div class="reaction-picker" id="reactionPicker" style="display: none;">
+            <div class="reaction-emojis">
+                <span class="reaction-emoji" data-reaction="👍">👍</span>
+                <span class="reaction-emoji" data-reaction="❤️">❤️</span>
+                <span class="reaction-emoji" data-reaction="😂">😂</span>
+                <span class="reaction-emoji" data-reaction="😮">😮</span>
+                <span class="reaction-emoji" data-reaction="😢">😢</span>
+                <span class="reaction-emoji" data-reaction="🙏">🙏</span>
+            </div>
+        </div>
+
+        <!-- Header Menu Dropdown -->
+        <div class="header-menu" id="headerMenu" style="display: none;">
+            <div class="menu-item" id="clearChatBtn">
+                <i class="fas fa-trash"></i>
+                <span>Clear Chat</span>
+            </div>
+            <div class="menu-item" id="exportChatBtn">
+                <i class="fas fa-download"></i>
+                <span>Export Chat</span>
+            </div>
+            <div class="menu-item" id="settingsBtn">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+        </div>
+
+        <!-- Confirmation Dialog -->
+        <div class="confirmation-dialog" id="confirmationDialog" style="display: none;">
+            <div class="dialog-content">
+                <div class="dialog-header">
+                    <h3 id="dialogTitle">Confirm Action</h3>
+                </div>
+                <div class="dialog-body">
+                    <p id="dialogMessage">Are you sure you want to perform this action?</p>
+                </div>
+                <div class="dialog-actions">
+                    <button class="dialog-btn cancel-btn" id="dialogCancel">Cancel</button>
+                    <button class="dialog-btn confirm-btn" id="dialogConfirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

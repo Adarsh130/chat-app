@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="generateIcon(72)">72x72</button>
+    <button onclick="generateIcon(96)">96x96</button>
+    <button onclick="generateIcon(128)">128x128</button>
+    <button onclick="generateIcon(144)">144x144</button>
+    <button onclick="generateIcon(152)">152x152</button>
+    <button onclick="generateIcon(192)">192x192</button>
+    <button onclick="generateIcon(384)">384x384</button>
+    <button onclick="generateIcon(512)">512x512</button>
+
+    <script>
+        function generateIcon(size) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#00a884');
+            gradient.addColorStop(1, '#06cf9c');
+            
+            // Draw background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw chat bubble icon
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const bubbleSize = size * 0.6;
+            
+            // Main chat bubble
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.roundRect(centerX - bubbleSize/2, centerY - bubbleSize/2, bubbleSize, bubbleSize * 0.7, bubbleSize * 0.1);
+            ctx.fill();
+            
+            // Small tail
+            ctx.beginPath();
+            ctx.moveTo(centerX - bubbleSize/4, centerY + bubbleSize/4);
+            ctx.lineTo(centerX - bubbleSize/3, centerY + bubbleSize/2);
+            ctx.lineTo(centerX - bubbleSize/6, centerY + bubbleSize/3);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Add dots inside bubble
+            const dotSize = size * 0.03;
+            ctx.fillStyle = '#00a884';
+            
+            // Three dots
+            for (let i = 0; i < 3; i++) {
+                const dotX = centerX - dotSize * 2 + (i * dotSize * 2);
+                const dotY = centerY - dotSize;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, dotSize, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // Download the icon
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Polyfill for roundRect if not supported
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                this.moveTo(x + radius, y);
+                this.lineTo(x + width - radius, y);
+                this.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.lineTo(x + width, y + height - radius);
+                this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.lineTo(x + radius, y + height);
+                this.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.lineTo(x, y + radius);
+                this.quadraticCurveTo(x, y, x + radius, y);
+                this.closePath();
+            };
+        }
+    </script>
+</body>
+</html>
