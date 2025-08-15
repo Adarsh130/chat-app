@@ -413,6 +413,10 @@ class EnhancedAnonymousChat {
                 this.showTypingIndicator();
             }
         });
+        
+        this.socket.on('chatCleared', (data) => {
+            this.addSystemMessage('🗑️ ' + data.message);
+        });
     }
     
     // ============ MESSAGE HANDLING ============

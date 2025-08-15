@@ -43,12 +43,54 @@ let connectedUsers = new Set();
 let messageHistory = [];
 const MAX_HISTORY = 50; // Keep last 50 messages
 
+// Auto-delete chat history when no one is online
+let chatCleanupTimer = null;
+const CLEANUP_DELAY = parseInt(process.env.CHAT_CLEANUP_DELAY) || 5 * 60 * 1000; // Default: 5 minutes after last user leaves
+let chatWasCleared = false; // Flag to track if chat was auto-cleared
+
+// Function to clear chat history
+function clearChatHistory() {
+    const messageCount = messageHistory.length;
+    messageHistory = [];
+    chatWasCleared = true;
+    console.log(`🗑️  Auto-cleared ${messageCount} messages from chat history (no users online for ${CLEANUP_DELAY / 1000} seconds)`);
+}
+
+// Function to schedule chat cleanup
+function scheduleChatCleanup() {
+    // Clear any existing timer
+    if (chatCleanupTimer) {
+        clearTimeout(chatCleanupTimer);
+    }
+    
+    // Only schedule cleanup if no users are connected
+    if (connectedUsers.size === 0 && messageHistory.length > 0) {
+        console.log(`⏰ Scheduling chat cleanup in ${CLEANUP_DELAY / 1000} seconds (no users online)`);
+        chatCleanupTimer = setTimeout(() => {
+            clearChatHistory();
+            chatCleanupTimer = null;
+        }, CLEANUP_DELAY);
+    }
+}
+
+// Function to cancel chat cleanup
+function cancelChatCleanup() {
+    if (chatCleanupTimer) {
+        clearTimeout(chatCleanupTimer);
+        chatCleanupTimer = null;
+        console.log('⏰ Chat cleanup cancelled (user reconnected)');
+    }
+}
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
     
     // Add user to connected users
     connectedUsers.add(socket.id);
+    
+    // Cancel any pending chat cleanup since someone is now online
+    cancelChatCleanup();
     
     // Send current user count to all clients
     io.emit('userCount', connectedUsers.size);
@@ -57,6 +99,16 @@ io.on('connection', (socket) => {
     messageHistory.forEach(message => {
         socket.emit('message', message);
     });
+    
+    // If chat was previously cleared, notify the user
+    if (chatWasCleared && messageHistory.length === 0) {
+        socket.emit('chatCleared', {
+            message: 'Chat history was automatically cleared due to inactivity',
+            timestamp: new Date().toISOString()
+        });
+        // Reset the flag after the first user reconnects
+        chatWasCleared = false;
+    }
     
     // Notify others that a user joined
     socket.broadcast.emit('userJoined', { userId: socket.id });
@@ -114,6 +166,11 @@ io.on('connection', (socket) => {
         
         // Notify others that a user left
         socket.broadcast.emit('userLeft', { userId: socket.id });
+        
+        // Schedule chat cleanup if no users are left online
+        if (connectedUsers.size === 0) {
+            scheduleChatCleanup();
+        }
     });
 });
 
@@ -126,6 +183,7 @@ server.on('error', (err) => {
 server.listen(PORT, () => {
     console.log(`Anonymous Chat Server running on port ${PORT}`);
     console.log(`Open your browser and go to: http://localhost:${PORT}`);
+    console.log(`🗑️  Auto-cleanup enabled: Chat history will be cleared ${CLEANUP_DELAY / 1000} seconds after all users disconnect`);
 });
 
 // Graceful shutdown
