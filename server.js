@@ -45,7 +45,7 @@ const MAX_HISTORY = 50; // Keep last 50 messages
 
 // Auto-delete chat history when no one is online
 let chatCleanupTimer = null;
-const CLEANUP_DELAY = parseInt(process.env.CHAT_CLEANUP_DELAY) || 30 * 60 * 1000; // Default: 5 minutes after last user leaves
+const CLEANUP_DELAY = parseInt(process.env.CHAT_CLEANUP_DELAY) || 5 * 60 * 1000; // Default: 5 minutes after last user leaves
 let chatWasCleared = false; // Flag to track if chat was auto-cleared
 
 // Function to clear chat history
